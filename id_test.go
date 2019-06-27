@@ -7,7 +7,7 @@ const generateCount = 1000000
 func TestGenerateID(t *testing.T) {
 	m := make(map[string]bool)
 	for i := 0; i < generateCount; i++ {
-		id := GenerateID()
+		id := GenerateID(1)
 		m[id.String()] = true
 	}
 

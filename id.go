@@ -1,14 +1,11 @@
 package ids
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/binary"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
-
-	"perpengt/api/internal/app/configs"
 )
 
 const (
@@ -25,40 +22,34 @@ var (
 
 	lastTime uint64 = 0
 	sequence uint64 = 0
-
-	EmptyID = ID([]byte{0, 0, 0, 0, 0, 0, 0, 0})
 )
 
-// GenerateID - 완전히 고유한 8바이트 ID를 생성합니다.
+// GenerateID creates and returns a completely unique ID.
 //
-// 단, Machine ID가 같은 두 개의 머신에서 동시에 같은 요청을 받을 경우
-// 충돌이 발생할 가능성이 있습니다.
-func GenerateID() ID {
+// However, if two machines with the same Machine ID receive
+// the same request at the same time, there is a possibility of a conflict.
+func GenerateID(machineID uint64) ID {
 	now := uint64(time.Now().UnixNano())
 
-	// 1 나노초 이상 지났으면
 	if now > lastTime {
 		lastTime = now
 		sequence = 0
 	} else if sequence >= SequenceMax {
-		lastTime++ // 1 밀리초 지난 것 처럼
+		lastTime++
 		sequence = 0
 	} else {
 		sequence++
 	}
 
-	// 생성
-	n := (sequence&SequenceMax)<<52 + configs.GetMachineID()<<41 + (lastTime & TimestampMax)
+	n := (sequence&SequenceMax)<<52 + machineID<<41 + (lastTime & TimestampMax)
 
-	// 완료
-	result := make([]byte, 8)
+	result := make([]byte, IDSize)
 	endian.PutUint64(result, n)
 
 	return ID(result)
 }
 
 func DecodeID(id string) (ID, error) {
-	// URL-Encoded
 	id = URLDecodedString(id)
 
 	if len(id) != strLen {
@@ -77,10 +68,10 @@ func DecodeID(id string) (ID, error) {
 
 func (id ID) Valid() error {
 	if id == nil {
-		return errors.New("id is nil")
+		return ErrNilID
 	}
-	if len(id) != 8 {
-		return errors.New("id must be 8 bytes")
+	if len(id) != IDSize {
+		return ErrWrongSize
 	}
 	return nil
 }
@@ -109,4 +100,8 @@ func (id ID) Bytes() []byte {
 func URLDecodedString(id string) string {
 	// URL-Encoded
 	return strings.Replace(strings.Replace(id, "-", "+", -1), "_", "/", -1) + strings.Repeat("=", 4-(len(id)%4))
+}
+
+func Equal(a ID, b ID) bool {
+	return bytes.Equal(a, b)
 }
