@@ -15,6 +15,11 @@ func (id *ID) Value() (driver.Value, error) {
 }
 
 func (id *ID) Scan(src interface{}) error {
+	if src == nil {
+		*id = ID{}
+		return nil
+	}
+
 	data, ok := src.([]byte)
 	if !ok {
 		return errors.New("ids: unsupported type")
