@@ -28,7 +28,7 @@ var (
 //
 // However, if two machines with the same Machine ID receive
 // the same request at the same time, there is a possibility of a conflict.
-func GenerateID(machineID uint64) ID {
+func GenerateID(machineID uint64) *ID {
 	now := uint64(time.Now().UnixNano())
 
 	if now > lastTime {
@@ -46,11 +46,12 @@ func GenerateID(machineID uint64) ID {
 	result := make([]byte, IDSize)
 	endian.PutUint64(result, n)
 
-	return ID(result)
+	return (*ID)(&result)
 }
 
-func DecodeID(id string) (ID, error) {
-	id = URLDecodedString(id)
+func DecodeID(id string) (*ID, error) {
+	// URL-Encoded ID?
+	id = strings.Replace(strings.Replace(id, "-", "+", -1), "_", "/", -1) + strings.Repeat("=", 4-(len(id)%4))
 
 	if len(id) != strLen {
 		return nil, ErrInvalidID
@@ -63,45 +64,43 @@ func DecodeID(id string) (ID, error) {
 		return nil, err
 	}
 
-	return ID(result[:IDSize]), nil
+	result = result[:IDSize]
+
+	return (*ID)(&result), nil
 }
 
-func (id ID) Valid() error {
+func (id *ID) Valid() error {
 	if id == nil {
 		return ErrNilID
 	}
-	if len(id) != IDSize {
+	if len(*id) != IDSize {
 		return ErrWrongSize
 	}
 	return nil
 }
 
-func (id ID) Key() Key {
-	_ = id[7]
-	return Key{id[0], id[1], id[2], id[3], id[4], id[5], id[6], id[7]}
+func (id *ID) Key() Key {
+	arr := *id
+	_ = arr[7]
+	return Key{arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]}
 }
 
-func (id ID) String() string {
-	return base64.StdEncoding.EncodeToString(id)
+func (id *ID) String() string {
+	return base64.StdEncoding.EncodeToString(*id)
 }
 
-func (id ID) Array() [8]byte {
+func (id *ID) Array() [8]byte {
 	return id.Key()
 }
 
-func (id ID) URIString() string {
-	return base64.RawURLEncoding.EncodeToString(id)
+func (id *ID) URIString() string {
+	return base64.RawURLEncoding.EncodeToString(*id)
 }
 
-func (id ID) Bytes() []byte {
-	return id[:]
+func (id *ID) Bytes() []byte {
+	return *id
 }
 
-func URLDecodedString(id string) string {
-	// URL-Encoded
-	return strings.Replace(strings.Replace(id, "-", "+", -1), "_", "/", -1) + strings.Repeat("=", 4-(len(id)%4))
-}
-
-func Equal(a ID, b ID) bool {
-	return bytes.Equal(a, b)
+func Equal(a *ID, b *ID) bool {
+	return bytes.Equal(*a, *b)
 }

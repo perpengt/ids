@@ -4,8 +4,9 @@ type Key [8]byte
 
 var EmptyKey = Key{}
 
-func (k Key) ID() ID {
-	return ID(k[:])
+func (k Key) ID() *ID {
+	v := k[:]
+	return (*ID)(&v)
 }
 
 func (k Key) String() string {
