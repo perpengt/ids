@@ -35,6 +35,6 @@ func TestID_Scan(t *testing.T) {
 	}
 
 	if !Equal(testID, testResult) {
-		t.Errorf("The ID scanned is different from the original ID.")
+		t.Errorf("The scanned ID is different from the original ID.")
 	}
 }
