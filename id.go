@@ -24,6 +24,13 @@ var (
 	sequence uint64 = 0
 )
 
+// New creates new id from []byte.
+func New(data []byte) *ID {
+	_ = data[7]
+	id := &ID{data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]}
+	return id
+}
+
 // GenerateID creates and returns a completely unique ID.
 //
 // However, if two machines with the same Machine ID receive
