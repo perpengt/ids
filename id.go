@@ -87,12 +87,18 @@ func (id *ID) Valid() error {
 }
 
 func (id *ID) Key() Key {
+	if id == nil {
+		return EmptyKey
+	}
 	arr := *id
 	_ = arr[7]
 	return Key{arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]}
 }
 
 func (id *ID) String() string {
+	if id == nil {
+		return ""
+	}
 	return base64.StdEncoding.EncodeToString(*id)
 }
 
@@ -101,13 +107,25 @@ func (id *ID) Array() [8]byte {
 }
 
 func (id *ID) URIString() string {
+	if id == nil {
+		return ""
+	}
 	return base64.RawURLEncoding.EncodeToString(*id)
 }
 
 func (id *ID) Bytes() []byte {
+	if id == nil {
+		return nil
+	}
 	return *id
 }
 
 func Equal(a *ID, b *ID) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
 	return bytes.Equal(*a, *b)
 }

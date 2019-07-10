@@ -4,6 +4,10 @@ import "testing"
 
 const generateCount = 1000000
 
+func TestNew(t *testing.T) {
+
+}
+
 func TestGenerateID(t *testing.T) {
 	m := make(map[string]bool)
 	for i := 0; i < generateCount; i++ {
